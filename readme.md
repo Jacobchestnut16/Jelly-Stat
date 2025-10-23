@@ -1,12 +1,12 @@
-# Trakt Plus
-Trakt Plus is an extension app designed to improve the Trakt experience by enhancing recommendations and analytics. It integrates TMDB to counterbalance Trakt’s tendency to deliver repetitive or poorly rated recommendations. Instead of the common "flat curve" where the same shows or movies are repeated, Trakt Plus diversifies and personalizes content discovery.
+# Film Finder
+Film Finder is an extension app designed to improve the Trakt experience by enhancing recommendations and analytics. It integrates TMDB to counterbalance Trakt’s tendency to deliver repetitive or poorly rated recommendations. Instead of the common "flat curve" where the same shows or movies are repeated, Film Finder diversifies and plans to personalizes content discovery.
 
 ## Features
 * Recommended → Personalized picks tailored to the user.
 * Upcoming → Movies and shows scheduled but not yet released.
 * Underrated → Highly rated titles with low watch counts.
 * Similar → Content related to a given movie or show.
-* History → Full watch log tracking.
+* History → Full watch log tracking via trakt.
 * Analytics → Aggregated statistics (average ratings, completion %, * binge patterns).
 * Curated → Pulls recommendations across all watchlists (3–6 per film * based on ratings).
 ## Planned Enhancements
@@ -18,17 +18,33 @@ Trakt Plus is an extension app designed to improve the Trakt experience by enhan
 * Docker setup to simplify configuration and deployment.
 ___
 # Setup
-Create a config.json or copy the example-config to config.json file at:`config/config.json`
+Create a .env or copy the example.env to .env file at:`config/.env`
 Add your credentials:
 ```
+#
+# Your trakt api `https://trakt.tv/oauth/applications` may require the following:
+#
+# -----Redirect uri------
+# http://localhost:3001/auth/callback
+# urn:ietf:wg:oauth:2.0:oob
+#
+# refere line 1 of redirects to `APP_HOST`
+# and docker-compose.yml services.backend.ports
+# if you change the ports
+#
 
-{
-  "client_id"     : "TraktClientID",
-  "client_secret" : "TraktClientSecret",
-  "tmdb_bearer"   : "TMDBAPIReadAccessToken"
-}
+# Trakt info
+TRAKT_CLIENT_ID     = ""
+TRAKT_CLIENT_SECRET = ""
+
+# The Moive Database info
+# This should be the API Read Access Token not the API Key
+TMDB_API_KEY        = ""
+
+# App info
+APP_HOST            = "http://localhost:3001" #same address as docker-compose.yml services.backend.ports
 ```
-* An example-config.json is preloaded as a base template.
+* An example.env is preloaded as a base template.
 * Neither api requires a purchase but Trakt VIP is recommended
     * [trakt website](https://www.trakt.tv)
     * [tmdb website](https://www.themoviedb.org)
@@ -80,75 +96,20 @@ services:
       - backend
 ```
 
-# API endpoints
+# API documentation
 
-This app comes with a secondary api that the front end uses, but this api is also exposed to the host. This means you can queary and use the api too.
-
-### Query options
-#### Individual option
+openAPI docs can be found on your instance at:
 ```
-http://localhost:3001/api/[endpoint]/[option]
-```
-#### All options
-```
-http://localhost:3001/api/[endpoint]
+http://localhost:3001/docs
 ```
 
-### Endpoints list
-```
-{
-    "/api/most_played":
-    {
-        "/api/most_played":"both",
-        "/api/most_played/movies":"movies",
-        "/api/most_played/shows":"shows",
-        "name":"most_played"
-    },
-    "/api/most_watched":
-    {
-        "/api/most_watched":"both",
-        "/api/most_watched/movies":"movies",
-        "/api/most_watched/shows":"shows",
-        "name":"most_watched"
-    },
-    "/api/popular":
-    {
-        "/api/popular":"both",
-        "/api/popular/movies":"movies",
-        "/api/popular/shows":"shows",
-        "name":"popular"
-    },
-    "/api/top_rated":
-    {
-        "/api/top_rated":"both",
-        "/api/top_rated/movies":"movies",
-        "/api/top_rated/shows":"shows",
-        "name":"top_rated"
-    },
-    "/api/upcoming":
-    {
-        "/api/upcoming":"both",
-        "/api/upcoming/in_theaters":in_theaters",
-        "/api/upcoming/unreleased":"unreleased",
-        "name":"upcoming"
-    }
-}
-```
+Current routes include
 
+    Users - trakt user data
+    Auth - trakt barer auth
+    Media - media item json objects
+    Sync - sync with trakt
 
-#### Future endpoints
+# What is trakt
 
-    // recommended → user-personalized picks.
-    // upcoming → unreleased but scheduled.
-    // underrated → high ratings but low watch counts.
-    // todo: get films watched or get individuals top high rated film
-    // todo: use to get recommended and grab high rated films
-    // todo: add a threshold if there aren't enough low watch counts with high ratings drop (add to a drop json before dropping)
-    // todo: finally if the list is under 10 films re-add random drops to fulfill this list
-    // similar → items related to a given movie/show.
-    // history → user’s watch log.
-    // analytics → aggregated stats like avg rating, completion %, binge patterns.
-    // curated → from all watch lists get 3-6 recommendations per film
-    // todo: get a combined list of all watchlist' data
-    // todo: get 3-6 recommendations per film based on rating 3 no rating 6 highest rating
-    // todo: propose: considerations to shorten the list [newest films, most popular, oldest films]
+Trakt TV is a source that will help organize your collections, create multi watchlist playlists, and even scrobble your media. Scrobbling is a method to grab data about your currently watching on your devices. Trakt VIP will scrobble most main stream streaming services.

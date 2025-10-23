@@ -1,114 +1,67 @@
 import { useEffect, useState } from "react";
-import './App.css';
 import Row from "./components/Row";
 
+const basePath = "https://image.tmdb.org/t/p/w500";
 
-async function fetchEndpoint(url) {
-    const res = await fetch(`http://localhost:3001${url}`);
-    return res.json();
-}
-
-function formatTitle(str) {
-    return str
-        .replace(/_/g, " ")            // replace underscores with spaces
-        .replace(/-/g," ")
-        .replace(/\b\w/g, c => c.toUpperCase()); // capitalize each word
-}
-function DataTable({ title, items, basePath, isShow }) {
-    if (!Array.isArray(items) || items.length === 0) {
-        return ("");
-    }
-
-    return (
-        <div>
-            <Row
-                title={title}
-                items={items}
-                basePath={basePath}
-                isMovie={!isShow}
-            />
-        </div>
-    );
-}
-
-
-function App() {
-    const [routes, setRoutes] = useState(null);
-    const [data, setData] = useState({});
-    const [basePath, setBasePath] = useState("https://image.tmdb.org/t/p/original");
+export default function MediaPage() {
+    const [data, setData] = useState({
+        trendingMovies: [],
+        trendingShows: []
+    });
 
     useEffect(() => {
-        fetch("http://localhost:3001/api")
-            .then((res) => res.json())
-            .then(setRoutes);
-    }, []);
+        const fetchData = async () => {
+            const [moviesRes, showsRes] = await Promise.all([
+                fetch("http://localhost:3001/media/trending/movies"),
+                fetch("http://localhost:3001/media/trending/shows")
+            ]);
+            const [movies, shows] = await Promise.all([moviesRes.json(), showsRes.json()]);
 
-    useEffect(() => {
-        if (!routes) return;
+            // normalize trakt format
+            const normMovies = movies.map(m => ({
+                title: m.movie?.title,
+                poster_path: m.movie?.images?.posters?.[0]?.file_path || null
+            }));
 
-        const fetchAll = async () => {
-            let results = {};
-            for (const [path, info] of Object.entries(routes)) {
-                const endpointName = info.name;
-                results[endpointName] = {};
+            const normShows = shows.map(s => ({
+                name: s.show?.title || s.show?.name,
+                poster_path: s.show?.images?.posters?.[0]?.file_path || null
+            }));
 
-                for (const [key, val] of Object.entries(info)) {
-                    if (val === "name" || val === "both" || val === "content-type") continue;
-                    if (key.startsWith(path)) {
-                        const subKey = val; // e.g. "movies", "shows"
-                        try {
-                            const json = await fetchEndpoint(key);
-                            results[endpointName][subKey] = Array.isArray(json) ? json : [];
-                        } catch (err) {
-                            console.error(`Error fetching ${key}:`, err);
-                            results[endpointName][subKey] = [];
-                        }
-                    }
-                }
-            }
-            setData(results);
+            setData({
+                trendingMovies: normMovies,
+                trendingShows: normShows
+            });
         };
 
-        fetchAll();
-    }, [routes]);
-
-    if (!routes) return <p>Loading endpoints...</p>;
-    if (Object.keys(data).length === 0) return <p>Loading data...</p>;
+        fetchData();
+    }, []);
 
     return (
         <div>
-            <div>
-                <nav>
-                    <ul>
-                        <li>
-                            <a href="#">Trakt Plus</a>
-                        </li>
-                        <li>
-                            <a href="#movies">Movies</a>
-                        </li>
-                        <li>
-                            <a href="#shows">Shows</a>
-                        </li>
-                    </ul>
-                </nav>
+            <nav>
+                <ul>
+                    <li><a href="#">Trakt Plus</a></li>
+                    <li><a href="#movies">Movies</a></li>
+                    <li><a href="#shows">Shows</a></li>
+                </ul>
+            </nav>
+
+            <Row
+                title="Trending Movies"
+                items={data.trendingMovies}
+                basePath={basePath}
+                isMovie={true}
+            />
+            <Row
+                title="Trending Shows"
+                items={data.trendingShows}
+                basePath={basePath}
+                isMovie={false}
+            />
+            <div className={'credit'}>
+                <p>Images powered by <a href="https://tmdb.org">TMDB</a></p>
             </div>
-            {Object.entries(data).map(([endpointName, subData]) => (
-                <div key={endpointName}>
-                    <h1>{formatTitle(endpointName)}</h1>
-                    {Object.entries(subData).map(([subKey, items]) => (
-                        <DataTable
-                            key={subKey}
-                            title={subKey}
-                            items={items}
-                            basePath={basePath}
-                            isShow={subKey === "shows"}
-                        />
-                    ))}
-                </div>
-            ))}
-            <p>Images powered by <a href="https://tmdb.org">TMDB</a></p>
         </div>
     );
 }
-
-export default App;
