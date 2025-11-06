@@ -1,20 +1,42 @@
 services:
+  db:
+    image: postgres:16
+    container_name: traktplus_db
+    restart: always
+    environment:
+      POSTGRES_USER: traktuser
+      POSTGRES_PASSWORD: traktpass
+      POSTGRES_DB: traktplus
+    volumes:
+      - trakt_db_data:/var/lib/postgresql/data
+      - ./Backend/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    ports:
+      - "5432:5432"
+
   backend:
     build: ./backend #Backend project dircotry
+
     container_name: backend
-    ports:
-      - "3001:8080" #The backend uses port 8080, 3001 is the port the frontend looks up
-    volumes:
-      - ./config:/app/config:ro #The config file
+    depends_on:
+      - db
     environment:
       - ENV=production
       - CONFIG_PATH=/app/config/config.json #The location of the configfile for the backend to lookup
-
+      - DATABASE_URL=postgresql://traktuser:traktpass@db:5432/traktplus
+    ports:
+      - "3001:8080" #The backend uses port 8080, 3001 is the port the frontend looks up
+    volumes:
+      - ./config/.env:/app/.env #The config file
 
   frontend:
     build: ./frontend
     container_name: frontend
-    ports:
-      - "3000:80" #NGINX runs 80 for the frontend change 3000 if you need a different port on your host
     depends_on:
       - backend
+    ports:
+      - "3000:80" #NGINX runs 80 for the frontend change 3000 if you need a different port on your host
+
+
+volumes:
+  trakt_db_data:
+

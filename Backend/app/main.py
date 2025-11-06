@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import auth, media, user, sync
+from app.routes import auth, media, user, sync, images
 
 def create_app():
     app = FastAPI(title="Film Finder", version="0.1")
@@ -16,6 +16,7 @@ def create_app():
     # include routes
     app.include_router(auth.router, prefix="/auth", tags=["Auth"])
     app.include_router(media.router, prefix="/media", tags=["Media"])
+    app.include_router(images.router, prefix="/images", tags=["Images"])
     app.include_router(sync.router, prefix="/sync", tags=["Sync"])
 
     app.include_router(user.router, prefix="/user", tags=["User"])
