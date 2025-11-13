@@ -1,17 +1,20 @@
 import datetime
-
 from sqlalchemy import create_engine, text
 from app.utils.config import DATABASE_URL
 
-# -----------------------
-# Establish connection
-# -----------------------
-
 engine = create_engine(DATABASE_URL)
-
 
 def get_connection():
     return engine.connect()
+
+# -----------------------
+# Helper: row conversion
+# -----------------------
+def rows_to_dicts(result):
+    return [dict(row._mapping) for row in result]
+
+def row_to_dict(row):
+    return dict(row._mapping) if row else None
 
 
 # -----------------------
@@ -20,7 +23,7 @@ def get_connection():
 
 def create_user(username, password, trakt_client_id="", trakt_client_secret=""):
     with engine.begin() as conn:
-        result = conn.execute(
+        r = conn.execute(
             text("""
                 INSERT INTO users (username, pass, trakt_client_id, trakt_client_secret)
                 VALUES (:username, :pass, :trakt_client_id, :trakt_client_secret)
@@ -33,30 +36,22 @@ def create_user(username, password, trakt_client_id="", trakt_client_secret=""):
                 "trakt_client_secret": trakt_client_secret
             },
         )
-
-        return result.scalar()
-
+        return r.scalar()
 
 def get_user_by_id(user_id):
     with get_connection() as conn:
         r = conn.execute(text("SELECT * FROM users WHERE id = :id"), {"id": user_id})
-        return r.fetchone()
-
+        return row_to_dict(r.fetchone())
 
 def authUser(username):
     with get_connection() as conn:
         r = conn.execute(text("SELECT * FROM users WHERE username = :username"), {"username": username})
-        row = r.fetchone()
-        if not row:
-            return None
-        return dict(row._mapping)
-
+        return row_to_dict(r.fetchone())
 
 def get_user_by_trakt_id(trakt_id):
     with get_connection() as conn:
         r = conn.execute(text("SELECT * FROM users WHERE trakt_id = :trakt_id"), {"trakt_id": trakt_id})
-        return r.fetchone()
-
+        return row_to_dict(r.fetchone())
 
 def update_user_tokens(user_id, access_token, refresh_token=None, token_expires=None):
     with engine.begin() as conn:
@@ -77,7 +72,6 @@ def update_user_tokens(user_id, access_token, refresh_token=None, token_expires=
         )
         return True
 
-
 def delete_user(user_id):
     with engine.begin() as conn:
         conn.execute(text("DELETE FROM users WHERE id = :id"), {"id": user_id})
@@ -91,14 +85,12 @@ def delete_user(user_id):
 def get_tmdb_keys():
     with get_connection() as conn:
         r = conn.execute(text("SELECT * FROM tmdb_api ORDER BY id"))
-        return r.fetchall()
-
+        return rows_to_dicts(r)
 
 def get_tmdb_key(key_id):
     with get_connection() as conn:
         r = conn.execute(text("SELECT * FROM tmdb_api WHERE id = :id"), {"id": key_id})
-        return r.fetchone()
-
+        return row_to_dict(r.fetchone())
 
 def add_tmdb_key(api_key, active=False):
     with engine.begin() as conn:
@@ -107,7 +99,6 @@ def add_tmdb_key(api_key, active=False):
             {"api_key": api_key, "active": active},
         )
         return r.scalar()
-
 
 def update_tmdb_key(key_id, api_key=None, active=None):
     parts = []
@@ -124,7 +115,6 @@ def update_tmdb_key(key_id, api_key=None, active=None):
     with engine.begin() as conn:
         conn.execute(text(stmt), params)
         return True
-
 
 def delete_tmdb_key(key_id=None, api_key=None):
     if key_id is None and api_key is None:
@@ -143,21 +133,19 @@ def delete_tmdb_key(key_id=None, api_key=None):
 
 def get_selected_tmdb_key(user_id):
     with get_connection() as conn:
-        r = conn.execute(text("SELECT tmdb_api_id FROM user_tmdb_key WHERE user_id = :user_id AND selected = TRUE"),
-                         {"user_id": user_id})
+        r = conn.execute(
+            text("SELECT tmdb_api_id FROM user_tmdb_key WHERE user_id = :user_id AND selected = TRUE"),
+            {"user_id": user_id})
         row = r.fetchone()
         if not row:
             return None
         key = get_tmdb_key(row[0])
-        return (row[0], key["api_key"]) if key else (row[0], None)
-
+        return {"id": row[0], "api_key": key["api_key"] if key else None}
 
 def select_tmdb_key(user_id, tmdb_api_id):
-    # Ensure only one selected per user. Use transaction.
     with engine.begin() as conn:
-        # set all selected=false for this user
-        conn.execute(text("UPDATE user_tmdb_key SET selected = FALSE WHERE user_id = :user_id"), {"user_id": user_id})
-        # try update existing row first
+        conn.execute(text("UPDATE user_tmdb_key SET selected = FALSE WHERE user_id = :user_id"),
+                     {"user_id": user_id})
         res = conn.execute(
             text("""
                 UPDATE user_tmdb_key
@@ -170,18 +158,18 @@ def select_tmdb_key(user_id, tmdb_api_id):
         updated_id = res.scalar()
         if updated_id:
             return updated_id
-        # otherwise insert
         r = conn.execute(
-            text(
-                "INSERT INTO user_tmdb_key (user_id, tmdb_api_id, selected) VALUES (:user_id, :tmdb_api_id, TRUE) RETURNING id"),
+            text("""
+                INSERT INTO user_tmdb_key (user_id, tmdb_api_id, selected)
+                VALUES (:user_id, :tmdb_api_id, TRUE)
+                RETURNING id
+            """),
             {"user_id": user_id, "tmdb_api_id": tmdb_api_id},
         )
         return r.scalar()
 
-
 def update_selected_tmdb_key(user_id, tmdb_api_id):
     return select_tmdb_key(user_id, tmdb_api_id)
-
 
 def remove_selected_tmdb_key(user_id):
     with engine.begin() as conn:
@@ -196,14 +184,12 @@ def remove_selected_tmdb_key(user_id):
 def get_jellyseerr_keys():
     with get_connection() as conn:
         r = conn.execute(text("SELECT * FROM jellyseerr_api ORDER BY id"))
-        return r.fetchall()
-
+        return rows_to_dicts(r)
 
 def get_jellyseerr_key(key_id):
     with get_connection() as conn:
         r = conn.execute(text("SELECT * FROM jellyseerr_api WHERE id = :id"), {"id": key_id})
-        return r.fetchone()
-
+        return row_to_dict(r.fetchone())
 
 def add_jellyseerr_key(api_key, active=False):
     with engine.begin() as conn:
@@ -212,7 +198,6 @@ def add_jellyseerr_key(api_key, active=False):
             {"api_key": api_key, "active": active},
         )
         return r.scalar()
-
 
 def update_jellyseerr_key(key_id, api_key=None, active=None):
     parts = []
@@ -229,7 +214,6 @@ def update_jellyseerr_key(key_id, api_key=None, active=None):
     with engine.begin() as conn:
         conn.execute(text(stmt), params)
         return True
-
 
 def delete_jellyseerr_key(key_id=None, api_key=None):
     if key_id is None and api_key is None:
@@ -255,8 +239,7 @@ def get_selected_jellyseerr_key(user_id):
         if not row:
             return None
         key = get_jellyseerr_key(row[0])
-        return (row[0], key["api_key"]) if key else (row[0], None)
-
+        return {"id": row[0], "api_key": key["api_key"] if key else None}
 
 def select_jellyseerr_key(user_id, jellyseerr_api_id):
     with engine.begin() as conn:
@@ -275,16 +258,17 @@ def select_jellyseerr_key(user_id, jellyseerr_api_id):
         if updated_id:
             return updated_id
         r = conn.execute(
-            text(
-                "INSERT INTO user_jellyseerr_key (user_id, jellyseerr_api_id, selected) VALUES (:user_id, :jellyseerr_api_id, TRUE) RETURNING id"),
+            text("""
+                INSERT INTO user_jellyseerr_key (user_id, jellyseerr_api_id, selected)
+                VALUES (:user_id, :jellyseerr_api_id, TRUE)
+                RETURNING id
+            """),
             {"user_id": user_id, "jellyseerr_api_id": jellyseerr_api_id},
         )
         return r.scalar()
 
-
 def update_selected_jellyseerr_key(user_id, jellyseerr_api_id):
     return select_jellyseerr_key(user_id, jellyseerr_api_id)
-
 
 def remove_selected_jellyseerr_key(user_id):
     with engine.begin() as conn:
@@ -312,26 +296,22 @@ def add_film(tmdb_id, slug=None, jellyfin_id=None, jellyseerr_id=None):
         )
         return r.scalar()
 
-
 def get_film(tmdb_id):
     with get_connection() as conn:
         r = conn.execute(text("SELECT * FROM films WHERE tmdb_id = :tmdb_id"), {"tmdb_id": tmdb_id})
-        return r.fetchone()
-
+        return row_to_dict(r.fetchone())
 
 def delete_film(tmdb_id):
     with engine.begin() as conn:
         conn.execute(text("DELETE FROM films WHERE tmdb_id = :tmdb_id"), {"tmdb_id": tmdb_id})
         return True
 
-
 def lookup_film_image(tmdb_id):
     with get_connection() as conn:
         r = conn.execute(text(
             "SELECT poster_url, logo_url, backdrop_url, entry_date FROM film_images WHERE tmdb_id = :tmdb_id ORDER BY entry_date DESC LIMIT 1"),
                          {"tmdb_id": tmdb_id})
-        return r.fetchone()
-
+        return row_to_dict(r.fetchone())
 
 def add_film_image(tmdb_id, poster_url=None, logo_url=None, backdrop_url=None):
     with engine.begin() as conn:
@@ -343,14 +323,13 @@ def add_film_image(tmdb_id, poster_url=None, logo_url=None, backdrop_url=None):
             """),
             {
                 "tmdb_id": tmdb_id,
-                "entry_date": datetime.now(),
+                "entry_date": datetime.datetime.now(),
                 "poster": poster_url,
                 "logo": logo_url,
                 "backdrop": backdrop_url,
             },
         )
         return r.scalar()
-
 
 def delete_film_image(film_image_id=None, tmdb_id=None):
     if film_image_id is None and tmdb_id is None:
@@ -375,17 +354,15 @@ def add_rating(tmdb_id, user_id, rating, submitted=False):
                 VALUES (:tmdb_id, :user_id, :rating, :date, :submitted)
                 RETURNING id
             """),
-            {"tmdb_id": tmdb_id, "user_id": user_id, "rating": rating, "date": datetime.now(), "submitted": submitted},
+            {"tmdb_id": tmdb_id, "user_id": user_id, "rating": rating, "date": datetime.datetime.now(), "submitted": submitted},
         )
         return r.scalar()
-
 
 def get_rating(tmdb_id, user_id):
     with get_connection() as conn:
         r = conn.execute(text("SELECT * FROM ratings WHERE tmdb_id = :tmdb_id AND user_id = :user_id"),
                          {"tmdb_id": tmdb_id, "user_id": user_id})
-        return r.fetchone()
-
+        return row_to_dict(r.fetchone())
 
 def update_rating(tmdb_id, user_id, rating=None, submitted=None):
     parts = []
@@ -402,7 +379,6 @@ def update_rating(tmdb_id, user_id, rating=None, submitted=None):
     with engine.begin() as conn:
         conn.execute(text(stmt), params)
         return True
-
 
 def delete_rating(tmdb_id, user_id):
     with engine.begin() as conn:
@@ -423,17 +399,15 @@ def add_history(tmdb_id, user_id, submitted=False):
                 VALUES (:tmdb_id, :user_id, :date, :submitted)
                 RETURNING id
             """),
-            {"tmdb_id": tmdb_id, "user_id": user_id, "date": datetime.now(), "submitted": submitted},
+            {"tmdb_id": tmdb_id, "user_id": user_id, "date": datetime.datetime.now(), "submitted": submitted},
         )
         return r.scalar()
-
 
 def get_history_for_user(user_id, limit=100):
     with get_connection() as conn:
         r = conn.execute(text("SELECT * FROM history WHERE user_id = :user_id ORDER BY date DESC LIMIT :limit"),
                          {"user_id": user_id, "limit": limit})
-        return r.fetchall()
-
+        return rows_to_dicts(r)
 
 def delete_history(tmdb_id, user_id):
     with engine.begin() as conn:

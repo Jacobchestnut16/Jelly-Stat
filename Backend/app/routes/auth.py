@@ -1,44 +1,5 @@
-# from __future__ import annotations
-#
-# from idlelib.query import Query
-#
-# from fastapi import APIRouter, Request, HTTPException
-# from fastapi.responses import RedirectResponse
-# from app.services import trakt_oauth
-#
-# router = APIRouter()
-#
-# @router.get("/login")
-# def login(state: str = "state"):
-#     url = trakt_oauth.build_auth_url(state)
-#     return RedirectResponse(url)
-#
-# @router.get("/callback")
-# def callback(request: Request, code: str = None, state: str = None):
-#     if not code:
-#         raise HTTPException(status_code=400, detail="missing code")
-#     try:
-#         token = trakt_oauth.exchange_code_for_token(code)
-#     except Exception as exc:
-#         raise HTTPException(status_code=502, detail=str(exc))
-#     return {"status": "ok", "token": token}
-#
-# @router.get("/token")
-# # def token():
-#     # token = trakt_oauth.refresh_token_if_needed()
-#     # return token
-# def token(trakt_id: str | None = Query(None, description="Trakt id or slug of the user")):
-#     try:
-#         token = trakt_oauth.get_token_for_user_or_first(trakt_id)
-#     except LookupError as exc:
-#         raise HTTPException(status_code=404, detail=str(exc))
-#     except Exception as exc:
-#         raise HTTPException(status_code=500, detail=str(exc))
-#     return token
 from __future__ import annotations
-
 from datetime import time, datetime
-
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import RedirectResponse
 from app.services import trakt_oauth
@@ -77,6 +38,16 @@ def signin(username: str, password: str):
 def register(username,password,client_id,client_secret):
     create_user(username=username,password=password,trakt_client_id=client_id,trakt_client_secret=client_secret)
 
+@router.get("/logout")
+def logout():
+    config.USERNAME             = None
+    config.UID                  = None
+    config.TRAKT_CLIENT_ID      = None
+    config.TRAKT_CLIENT_SECRET  = None
+    config.TRAKT_TOKEN          = None
+    config.TMDB_TOKEN           = None
+    config.JELLYSEERR_TOKEN     = None
+
 @router.get("/login")
 def login(state: str = "state"):
     return RedirectResponse(trakt_oauth.build_auth_url(state))
@@ -89,4 +60,4 @@ def callback(code: str | None = None, state: str | None = None):
         trakt_oauth.exchange_code_for_token(code)
     except Exception as exc:
         raise HTTPException(status_code=502, detail=str(exc))
-    return RedirectResponse("/")
+    return RedirectResponse(url="http://localhost:3000/")

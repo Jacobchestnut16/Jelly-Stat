@@ -16,14 +16,13 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 TRAKT_REDIRECT_URI = APP_HOST+'/auth/callback'
 
 TRAKT_TOKEN      = None
-TMDB_TOKEN       = None
+TMDB_TOKEN       = TMDB_API_KEY #Master Key
 JELLYSEERR_TOKEN = None
 
 USERNAME = None
 UID      = None
 
 required = {
-    "TMDB_API_KEY": TMDB_API_KEY,
     "APP_HOST": APP_HOST,
 }
 
