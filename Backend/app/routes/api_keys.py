@@ -13,7 +13,7 @@ from app.utils.database import (
     select_jellyseerr_key,
     get_selected_jellyseerr_key,
 )
-from app.utils import config
+from app.utils.session_manager import get_session
 
 router = APIRouter()
 
@@ -31,8 +31,12 @@ def api_get_tmdb_key(id: int | None = Query(None)):
     return get_tmdb_keys()
 
 @router.get("/tmdb/get/selected")
-def api_get_selected_tmdb_key():
-    data = get_selected_tmdb_key(config.UID)
+def api_get_selected_tmdb_key(session_id: str = Query(...)):
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    uid = session["UID"]
+    data = get_selected_tmdb_key(uid)
     if not data:
         raise HTTPException(status_code=404, detail="No selected TMDB key")
     return data
@@ -43,10 +47,13 @@ def api_add_tmdb_key(api_key: str = Body(..., embed=True)):
     return {"message": "TMDB key added"}
 
 @router.post("/tmdb/select")
-def api_select_tmdb_key(uid: int = Body(..., embed=True), api_key_id: int = Body(..., embed=True)):
+def api_select_tmdb_key(api_key_id: int = Body(..., embed=True), session_id: str = Body(...)):
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    uid = session["UID"]
     select_tmdb_key(uid, api_key_id)
     return {"message": "TMDB key selected"}
-
 
 # ------------
 #  Jellyseerr
@@ -62,8 +69,12 @@ def api_get_jellyseerr_key(id: int | None = Query(None)):
     return get_jellyseerr_keys()
 
 @router.get("/jellyseerr/get/selected")
-def api_get_selected_jellyseerr_key():
-    data = get_selected_jellyseerr_key(config.UID)
+def api_get_selected_jellyseerr_key(session_id: str = Query(...)):
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    uid = session["UID"]
+    data = get_selected_jellyseerr_key(uid)
     if not data:
         raise HTTPException(status_code=404, detail="No selected Jellyseerr key")
     return data
@@ -74,6 +85,10 @@ def api_add_jellyseerr_key(api_key: str = Body(..., embed=True)):
     return {"message": "Jellyseerr key added"}
 
 @router.post("/jellyseerr/select")
-def api_select_jellyseerr_key(uid: int = Body(..., embed=True), api_key_id: int = Body(..., embed=True)):
+def api_select_jellyseerr_key(api_key_id: int = Body(..., embed=True), session_id: str = Body(...)):
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    uid = session["UID"]
     select_jellyseerr_key(uid, api_key_id)
     return {"message": "Jellyseerr key selected"}

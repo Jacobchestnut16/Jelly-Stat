@@ -1,21 +1,14 @@
-# Film Finder
-Film Finder is an extension app designed to improve the Trakt experience by enhancing recommendations and analytics. It integrates TMDB to counterbalance Trakt’s tendency to deliver repetitive or poorly rated recommendations. Instead of the common "flat curve" where the same shows or movies are repeated, Film Finder diversifies and plans to personalizes content discovery.
+# Jelly-Stat
+Jelly-Stat is an extension app designed to improve the Trakt experience by enhancing recommendations and analytics. It integrates TMDB to counterbalance Trakt’s tendency to deliver repetitive or poorly rated recommendations. Instead of the common "flat curve" where the same shows or movies are repeated, Film Finder diversifies and plans to personalizes content discovery.
 
 ## Features
 * Recommended → Personalized picks tailored to the user.
-* Upcoming → Movies and shows scheduled but not yet released.
-* Underrated → Highly rated titles with low watch counts.
-* Similar → Content related to a given movie or show.
-* History → Full watch log tracking via trakt.
-* Analytics → Aggregated statistics (average ratings, completion %, * binge patterns).
-* Curated → Pulls recommendations across all watchlists (3–6 per film * based on ratings).
+* Trending → Movies and shows trending.
 ## Planned Enhancements
-* Fetch top-rated films for each user.
 * Improved recommendation filters with rating and watch-count thresholds.
-* Fallback logic for short lists (random drops if <10 items).
 * Combined multi-watchlist recommendations with rating-based prioritization.
-* Considerations for list shortening (e.g., newest, most popular, oldest).
-* Docker setup to simplify configuration and deployment.
+* Jellyfin + Jellyseerr intigration
+* ADR (Automatic Disc Ripper) intigration
 ___
 # Setup
 Create a .env or copy the example.env to .env file at:`config/.env`
@@ -33,12 +26,10 @@ Add your credentials:
 # if you change the ports
 #
 
-# Trakt info
-TRAKT_CLIENT_ID     = ""
-TRAKT_CLIENT_SECRET = ""
-
-# The Moive Database info
+# TMDB
+# In order to view where to watch locations and posters this api is required
 # This should be the API Read Access Token not the API Key
+# This key is not required but this will act as a master key for all users
 TMDB_API_KEY        = ""
 
 # App info
@@ -63,6 +54,8 @@ Docker Desktop:
 
 ### Run docker
 
+ Warning you may want to change the postgress user and password before running docker see below [configuring the compose file](configuring%20the%20compose%20file])
+
 From the root of the apps directory there is a `docker-compose` file cd to the direcotry containning this file and run:
 ```
 docker compose up -d
@@ -75,25 +68,46 @@ docker-compose up -d
 # configuring the compose file
 ```
 services:
+  db:
+    image: postgres:16
+    container_name: traktplus_db
+    restart: always
+    environment:
+      POSTGRES_USER: [your-username]
+      POSTGRES_PASSWORD: [your-password]
+      POSTGRES_DB: traktplus
+    volumes:
+      - trakt_db_data:/var/lib/postgresql/data
+      - ./Backend/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    ports:
+      - "5432:5432"
+
   backend:
     build: ./backend #Backend project dircotry
-    container_name: trakt_backend
-    ports:
-      - "3001:8080" #The backend uses port 8080, 3001 is the port the frontend looks up. recomended to not change
-    volumes:
-      - ./backend/config:/app/config:ro #The config file
+
+    container_name: backend
+    depends_on:
+      - db
     environment:
       - ENV=production
       - CONFIG_PATH=/app/config/config.json #The location of the configfile for the backend to lookup
-
+      - DATABASE_URL=postgresql://traktuser:traktpass@db:5432/traktplus
+    ports:
+      - "3001:8080" #The backend uses port 8080, 3001 is the port the frontend looks up
+    volumes:
+      - ./config/.env:/app/.env #The config file
 
   frontend:
     build: ./frontend
-    container_name: trakt_frontend
-    ports:
-      - "3000:80" #NGINX runs 80 for the frontend change 3000 if you need a different port on your host
+    container_name: frontend
     depends_on:
       - backend
+    ports:
+      - "3000:80" #NGINX runs 80 for the frontend change 3000 if you need a different port on your host
+
+
+volumes:
+  trakt_db_data:
 ```
 
 # API documentation
@@ -102,14 +116,3 @@ openAPI docs can be found on your instance at:
 ```
 http://localhost:3001/docs
 ```
-
-Current routes include
-
-    Users - trakt user data
-    Auth - trakt barer auth
-    Media - media item json objects
-    Sync - sync with trakt
-
-# What is trakt
-
-Trakt TV is a source that will help organize your collections, create multi watchlist playlists, and even scrobble your media. Scrobbling is a method to grab data about your currently watching on your devices. Trakt VIP will scrobble most main stream streaming services.

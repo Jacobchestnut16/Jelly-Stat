@@ -1,8 +1,8 @@
-import Trending from "./media/Trending";
-import Recommended from "./media/Recommended.jsx";
-import { useEffect, useState } from "react";
+import {TrendingMovies} from "./media/Trending";
+import {RecommendedMovies} from "./media/Recommended.jsx";
+import {useEffect, useState} from "react";
 
-export default function MediaPage({ sessionId }) {
+export default function Movies({ sessionId }) {
     const [localSessionId, setLocalSessionId] = useState(sessionId);
 
     useEffect(() => {
@@ -17,11 +17,10 @@ export default function MediaPage({ sessionId }) {
         return () => window.removeEventListener("storage", handler);
     }, []);
 
-    // Example: pass sessionId to Trending and Recommended if they need it in fetch calls
     return (
         <div>
-            <Trending sessionId={localSessionId} />
-            <Recommended sessionId={localSessionId} />
+            <TrendingMovies sessionId={localSessionId}/>
+            <RecommendedMovies sessionId={localSessionId}/>
             <div className="credit">
                 <p>Images powered by <a href="https://tmdb.org">TMDB</a></p>
             </div>
