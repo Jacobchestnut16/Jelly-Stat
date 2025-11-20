@@ -21,7 +21,6 @@ services:
       - db
     environment:
       - ENV=production
-      - CONFIG_PATH=/app/config/config.json #The location of the configfile for the backend to lookup
       - DATABASE_URL=postgresql://traktuser:traktpass@db:5432/traktplus
     ports:
       - "3001:8080" #The backend uses port 8080, 3001 is the port the frontend looks up
