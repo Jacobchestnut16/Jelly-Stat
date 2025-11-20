@@ -79,6 +79,7 @@ export default function UserDetails({ sessionId }) {
                             <input
                                 className="settings-input"
                                 type="text"
+                                value={userTraktInfo.username || ""}
                                 readOnly
                             />
                         </td>
@@ -90,6 +91,7 @@ export default function UserDetails({ sessionId }) {
                             <input
                                 className="settings-input"
                                 type="password"
+                                value={userTraktInfo.pass || ""}
                                 readOnly
                             />
                         </td>
