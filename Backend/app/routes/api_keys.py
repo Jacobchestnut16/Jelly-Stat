@@ -13,7 +13,7 @@ from app.utils.database import (
     select_jellyseerr_key,
     get_selected_jellyseerr_key,
 )
-from app.utils.session_manager import get_session
+from app.utils.session_manager import get_session, update_session
 
 router = APIRouter()
 
@@ -53,6 +53,7 @@ def api_select_tmdb_key(api_key_id: int = Body(..., embed=True), session_id: str
         raise HTTPException(status_code=401, detail="Unauthorized")
     uid = session["UID"]
     select_tmdb_key(uid, api_key_id)
+    update_session(state, {"TMDB_TOKEN": get_selected_tmdb_key(uid)["api_key"]})
     return {"message": "TMDB key selected"}
 
 # ------------
@@ -91,4 +92,5 @@ def api_select_jellyseerr_key(api_key_id: int = Body(..., embed=True), session_i
         raise HTTPException(status_code=401, detail="Unauthorized")
     uid = session["UID"]
     select_jellyseerr_key(uid, api_key_id)
+    update_session(state, {"JELLYSEERR_TOKEN": get_selected_jellyseerr_key(uid)["api_key"]})
     return {"message": "Jellyseerr key selected"}
