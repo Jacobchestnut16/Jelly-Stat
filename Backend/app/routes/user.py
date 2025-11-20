@@ -30,6 +30,16 @@ def trakt_login_info(session_id: str = Query(...)):
         raise HTTPException(401, "Missing user ID in session")
 
     ret = get_user_by_id(uid)
-    if ret and 'password' in ret:
-        ret['password'] = "*" * (len(ret['password']) * 3)
+    if ret and 'pass' in ret:
+        ret['pass'] = "*" * (len(ret['pass']) * 3)
+
+    if ret and 'access_token' in ret:
+        ret['access_token'] = "*" * (len(ret['access_token']) * 3)
+
+    if ret and 'refresh_token' in ret:
+        ret['refresh_token'] = "*" * (len(ret['refresh_token']) * 3)
+
+    if ret and 'trakt_client_secret' in ret:
+        ret['trakt_client_secret'] = "*" * (len(ret['trakt_client_secret']) * 3)
+
     return ret

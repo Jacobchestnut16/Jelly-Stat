@@ -1,6 +1,10 @@
 from __future__ import annotations
+
+import secrets
+
 from app.utils.database import (create_user,
                                 authUser,
+                                get_user_by_id,
                                 get_selected_tmdb_key,
                                 get_selected_jellyseerr_key,
                                 get_selected_jellyseerr_url,
@@ -55,6 +59,20 @@ def validate(session_id: str):
         raise HTTPException(401, "invalid session")
     return {"valid": True}
 
+@router.get("/user/details/exchange-code")
+def validate(session_id: str, password: str):
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(401, "invalid session")
+
+    p = get_user_by_id(session["UID"])
+    if not p or password != p['pass']:
+        raise HTTPException(status_code=401, detail="Invalid details")
+
+    exchange_code = secrets.token_hex(32)
+    update_session(session_id, {"Authorization": exchange_code})
+
+    return {"valid": True, "token":exchange_code}
 
 @router.get("/register")
 def register(username,password,client_id,client_secret):

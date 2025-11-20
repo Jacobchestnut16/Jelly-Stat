@@ -108,6 +108,7 @@ export default function Register() {
                 </div>
 
                 <button type="submit">Register</button>
+                <a href="/login">Already have an account? Sign in</a>
 
                 {message && <p>{message}</p>}
             </form>
