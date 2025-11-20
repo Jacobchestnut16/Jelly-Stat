@@ -7,11 +7,19 @@ from app.utils.database import (
     add_tmdb_key,
     select_tmdb_key,
     get_selected_tmdb_key,
+
     get_jellyseerr_key,
     get_jellyseerr_keys,
     add_jellyseerr_key,
     select_jellyseerr_key,
     get_selected_jellyseerr_key,
+
+    get_jellyfin_key,
+    get_jellyfin_keys,
+    add_jellyfin_key,
+    select_jellyfin_key,
+    get_selected_jellyfin_key,
+
 )
 from app.utils.session_manager import get_session, update_session
 
@@ -94,3 +102,42 @@ def api_select_jellyseerr_key(api_key_id: int = Body(..., embed=True), session_i
     select_jellyseerr_key(uid, api_key_id)
     update_session(session_id, {"JELLYSEERR_TOKEN": get_selected_jellyseerr_key(uid)["api_key"]})
     return {"message": "Jellyseerr key selected"}
+
+# ------------
+#  Jellyfin
+# ------------
+
+@router.get("/jellyfin/get")
+def api_get_jellyfin_key(id: int | None = Query(None)):
+    if id is not None:
+        data = get_jellyfin_key(id)
+        if not data:
+            raise HTTPException(status_code=404, detail="Jellyfin key not found")
+        return data
+    return get_jellyfin_keys()
+
+@router.get("/jellyfin/get/selected")
+def api_get_selected_jellyfin_key(session_id: str = Query(...)):
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    uid = session["UID"]
+    data = get_selected_jellyfin_key(uid)
+    if not data:
+        raise HTTPException(status_code=404, detail="No selected Jellyfin key")
+    return data
+
+@router.post("/jellyfin/add")
+def api_add_jellyfin_key(api_key: str = Body(..., embed=True)):
+    add_jellyfin_key(api_key)
+    return {"message": "Jellyfin key added"}
+
+@router.post("/jellyfin/select")
+def api_select_jellyfin_key(api_key_id: int = Body(..., embed=True), session_id: str = Body(...)):
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    uid = session["UID"]
+    select_jellyfin_key(uid, api_key_id)
+    update_session(session_id, {"JELLYFIN_TOKEN": get_selected_jellyfin_key(uid)["api_key"]})
+    return {"message": "Jellyfin key selected"}

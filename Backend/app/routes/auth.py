@@ -1,5 +1,12 @@
 from __future__ import annotations
-from app.utils.database import create_user, authUser, get_selected_tmdb_key
+from app.utils.database import (create_user,
+                                authUser,
+                                get_selected_tmdb_key,
+                                get_selected_jellyseerr_key,
+                                get_selected_jellyseerr_url,
+                                get_selected_jellyfin_key,
+                                get_selected_jellyfin_url
+                                )
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import RedirectResponse
@@ -24,7 +31,10 @@ def signin(username: str, password: str):
         "TRAKT_CLIENT_SECRET": p["trakt_client_secret"],
         "TRAKT_TOKEN": p["access_token"],
         "TMDB_TOKEN": get_selected_tmdb_key(p["id"])["api_key"] if get_selected_tmdb_key(p["id"]) else None,
-        "JELLYSEERR_TOKEN": p.get("jellyseerr_token"),
+        "JELLYSEERR_TOKEN": get_selected_jellyseerr_key(p["id"])["api_key"] if get_selected_jellyseerr_key(p["id"]) else None,
+        "JELLYSEERR_URL": get_selected_jellyseerr_url(p["id"])["url"] if get_selected_jellyseerr_url(p["id"]) else None,
+        "JELLYFIN_TOKEN": get_selected_jellyfin_key(p["id"])["api_key"] if get_selected_jellyfin_key(p["id"]) else None,
+        "JELLYFIN_URL": get_selected_jellyfin_url(p["id"])["url"] if get_selected_jellyfin_url(p["id"]) else None,
         "USERNAME": username,
         "UID": p["id"],
     }
