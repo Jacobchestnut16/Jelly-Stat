@@ -13,6 +13,12 @@ export default function App() {
     // Store sessionId from localStorage (was user_id before)
     const [sessionId, setSessionId] = useState(() => localStorage.getItem("session_id"));
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [pendingTrakt, setPendingTrakt] = useState(
+        localStorage.getItem("pending_trakt") === "1"
+    );
+    const [pendingRedirect, setPendingRedirect] = useState(
+        localStorage.getItem("pending_redirect") || ""
+    );
     const [userInfo, setUserInfo] = useState(null);
     const dropdownRef = useRef(null);
 
@@ -22,10 +28,17 @@ export default function App() {
         } catch (_) {}
 
         localStorage.removeItem("session_id");
+        localStorage.removeItem("pending_trakt");
+        localStorage.removeItem("pending_redirect");
+
         setSessionId(null);
+        setPendingTrakt(false);
+        setPendingRedirect("");
         setUserInfo(null);
+
         window.location.href = "/";
     }
+
 
     useEffect(() => {
         // Update sessionId when localStorage changes (ex. login from other tabs)
@@ -34,6 +47,34 @@ export default function App() {
         return () => window.removeEventListener("storage", handler);
     }, []);
 
+    // If a Trakt OAuth redirect is pending, run it
+// Validate session + run pending redirect
+    useEffect(() => {
+        async function validateAndRedirect() {
+            if (!sessionId) return;
+
+            try {
+                const res = await fetch(
+                    `http://localhost:3001/auth/validate?session_id=${sessionId}`
+                );
+                if (res.status === 401) {
+                    await logout();
+                    return;
+                }
+            } catch (_) {
+                await logout();
+                return;
+            }
+
+            if (pendingTrakt && pendingRedirect) {
+                window.location.href = pendingRedirect;
+            }
+        }
+
+        validateAndRedirect();
+    }, [sessionId, pendingTrakt, pendingRedirect]);
+
+
     // Load user details whenever sessionId changes
     useEffect(() => {
         if (!sessionId) {
@@ -41,13 +82,40 @@ export default function App() {
             return;
         }
 
+        if (pendingTrakt) return;
+
         async function loadUser() {
             try {
-                const res = await fetch(`http://localhost:3001/user/details?session_id=${sessionId}`);
+                const res = await fetch(
+                    `http://localhost:3001/user/details?session_id=${sessionId}`
+                );
+
                 if (res.status === 401) {
-                    await logout();
-                    return;
+                    console.warn("Could not retrieve User Details, Trakt may not be logged in")
+                    const res = await fetch(
+                        `http://localhost:3001/auth/validate?session_id=${sessionId}`
+                    );
+                    if (res.status === 200){
+                        console.warn("Session is Valid trying to log into Trakt")
+                        if (pendingRedirect) {
+                            var pndRdrt = pendingRedirect
+                            localStorage.removeItem("pending_trakt");
+                            localStorage.removeItem("pending_redirect");
+                            setPendingTrakt(false);
+                            setPendingRedirect("");
+                            window.location.href = pndRdrt;
+                        }else{
+                            console.error("No Trakt URL")
+                            await logout();
+                            return;
+                        }
+                    }else{
+                        console.error("INVALID SESSION logging out")
+                        await logout();
+                        return;
+                    }
                 }
+
                 const data = await res.json();
                 setUserInfo(data);
             } catch (_) {
@@ -56,7 +124,8 @@ export default function App() {
         }
 
         loadUser();
-    }, [sessionId]);
+    }, [sessionId, pendingTrakt]);
+
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -192,7 +261,9 @@ export default function App() {
                 <Route path="/shows" element={<Shows sessionId={sessionId} />} />
                 <Route path="/keys" element={<Keys sessionId={sessionId} />} />
                 <Route path="/user-details" element={<UserDetails sessionId={sessionId} />} />
-                <Route path="/login" element={<Login setSessionId={setSessionId} />} />
+                <Route path="/login"   element={<Login setSessionId={setSessionId}
+                                                       setPendingTrakt={setPendingTrakt}
+                                                       setPendingRedirect={setPendingRedirect} />} />
                 <Route path="/register" element={<Register setSessionId={setSessionId} />} />
                 <Route path="/movie/:tmdb_id" element={<FilmCallingCard sessionId={sessionId} />} />
                 <Route path="/show/:tmdb_id" element={<FilmCallingCard type="show" sessionId={sessionId} />} />
