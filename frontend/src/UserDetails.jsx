@@ -66,44 +66,71 @@ export default function UserDetails({ sessionId }) {
     if (loading) return <h1>Loading...</h1>;
 
     return (
-        <div>
-            <h1>{userInfo.user.name}</h1>
-            <div style={{display: "flex", flexDirection: "column", maxWidth: "500px", gap: "10px"}}>
-                <h2>Trakt Info</h2>
-                <div>
-                    <table>
-                        <tr>
-                            <td>
-                                <h3>Client ID</h3>
-                            </td>
-                            <td>
-                                <input
-                                    type="text"
-                                    readOnly
-                                    value={userTraktInfo.trakt_client_id || ""}
-                                    style={{width: "350px"}}
-                                />
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <h3>Client Secret</h3>
-                            </td>
-                            <td>
-                                <input
-                                    type="password"
-                                    readOnly
-                                    value={userTraktInfo.trakt_client_secret || ""}
-                                    style={{width: "350px"}}
+        <div className="settings-wrap">
+            <div className="settings-card">
+                <h2>User Details</h2>
+                <h3 style={{textAlign: "left", margin: 0}}>{userInfo.user.name}</h3>
 
-                                />
-                            </td>
-                        </tr>
-                    </table>
-                </div>
+                <table className="settings-table">
+                    <tbody>
+                    <tr>
+                        <td className="settings-label">Username</td>
+                        <td>
+                            <input
+                                className="settings-input"
+                                type="text"
+                                readOnly
+                            />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td className="settings-label">Password</td>
+                        <td>
+                            <input
+                                className="settings-input"
+                                type="password"
+                                readOnly
+                            />
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <h2 className="settings-section-title">Trakt Info</h2>
+                {userInfo.user.vip ? (
+                    <h3 style={{textAlign: "left", marginTop: "10px"}}>
+                        Trakt VIP User
+                    </h3>
+                ) : null}
+                <table className="settings-table">
+                    <tbody>
+                    <tr>
+                        <td className="settings-label">Client ID</td>
+                        <td>
+                            <input
+                                className="settings-input"
+                                type="text"
+                                readOnly
+                                value={userTraktInfo.trakt_client_id || ""}
+                            />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td className="settings-label">Client Secret</td>
+                        <td>
+                            <input
+                                className="settings-input"
+                                type="password"
+                                readOnly
+                                value={userTraktInfo.trakt_client_secret || ""}
+                            />
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
-            {userInfo.user.vip ? <h3>Trakt VIP User</h3> : null}
-
         </div>
     );
 }

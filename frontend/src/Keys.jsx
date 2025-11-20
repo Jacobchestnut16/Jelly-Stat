@@ -206,60 +206,65 @@ export default function Keys({ sessionId }) {
     }
 
     return (
-        <div>
-            <h2>TMDB Keys</h2>
-            <select
-                disabled={tmdbLoading}
-                value={tmdbSelectedId || ""}
-                onChange={(e) => selectTmdbKey(Number(e.target.value))}
-            >
-                <option value="" disabled>Select TMDB Key</option>
-                {tmdbKeys.map(({ id, api_key }) => (
-                    <option key={id} value={id}>
-                        {api_key}
-                    </option>
-                ))}
-            </select>
+        <div className="settings-wrap">
+            <div className="settings-card">
+                <h2>TMDB Keys</h2>
 
-            <div>
-                <input
-                    type="text"
-                    placeholder="Add new TMDB key"
-                    value={tmdbNewKey}
-                    onChange={(e) => setTmdbNewKey(e.target.value)}
+                <select
                     disabled={tmdbLoading}
-                />
-                <button onClick={addAndSelectTmdbKey} disabled={tmdbLoading || !tmdbNewKey}>
-                    Add & Select
-                </button>
-            </div>
+                    value={tmdbSelectedId || ""}
+                    onChange={(e) => selectTmdbKey(Number(e.target.value))}
+                >
+                    <option value="" disabled>Select TMDB Key</option>
+                    {tmdbKeys.map(({ id, api_key }) => (
+                        <option key={id} value={id}>
+                            {api_key}
+                        </option>
+                    ))}
+                </select>
 
-            <h2>Jellyseerr Keys</h2>
-            <select
-                disabled={jellyLoading}
-                value={jellySelectedId || ""}
-                onChange={(e) => selectJellyKey(Number(e.target.value))}
-            >
-                <option value="" disabled>Select Jellyseerr Key</option>
-                {jellyKeys.map(({ id, api_key }) => (
-                    <option key={id} value={id}>
-                        {api_key}
-                    </option>
-                ))}
-            </select>
+                <div className="settings-row">
+                    <input
+                        type="text"
+                        placeholder="Add new TMDB key"
+                        value={tmdbNewKey}
+                        onChange={(e) => setTmdbNewKey(e.target.value)}
+                        disabled={tmdbLoading}
+                    />
+                    <button onClick={addAndSelectTmdbKey} disabled={tmdbLoading || !tmdbNewKey}>
+                        Add
+                    </button>
+                </div>
 
-            <div>
-                <input
-                    type="text"
-                    placeholder="Add new Jellyseerr key"
-                    value={jellyNewKey}
-                    onChange={(e) => setJellyNewKey(e.target.value)}
+                <h2>Jellyseerr Keys</h2>
+
+                <select
                     disabled={jellyLoading}
-                />
-                <button onClick={addAndSelectJellyKey} disabled={jellyLoading || !jellyNewKey}>
-                    Add & Select
-                </button>
+                    value={jellySelectedId || ""}
+                    onChange={(e) => selectJellyKey(Number(e.target.value))}
+                >
+                    <option value="" disabled>Select Jellyseerr Key</option>
+                    {jellyKeys.map(({ id, api_key }) => (
+                        <option key={id} value={id}>
+                            {api_key}
+                        </option>
+                    ))}
+                </select>
+
+                <div className="settings-row">
+                    <input
+                        type="text"
+                        placeholder="Add new Jellyseerr key"
+                        value={jellyNewKey}
+                        onChange={(e) => setJellyNewKey(e.target.value)}
+                        disabled={jellyLoading}
+                    />
+                    <button onClick={addAndSelectJellyKey} disabled={jellyLoading || !jellyNewKey}>
+                        Add
+                    </button>
+                </div>
             </div>
         </div>
     );
+
 }

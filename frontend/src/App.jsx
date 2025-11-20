@@ -140,134 +140,137 @@ export default function App() {
 
     return (
         <BrowserRouter>
-            <nav>
-                <ul>
-                    <li><Link to="/">Jelly-Stat</Link></li>
-                    <li><Link to="/movies">Movies</Link></li>
-                    <li><Link to="/shows">Shows</Link></li>
-                </ul>
+            <div style={{display: "flex", flexDirection: "column", minHeight: "100vh"}}>
+                <nav>
+                    <ul>
+                        <li><Link to="/">Jelly-Stat</Link></li>
+                        <li><Link to="/movies">Movies</Link></li>
+                        <li><Link to="/shows">Shows</Link></li>
+                    </ul>
 
-                <ul>
-                    {sessionId ? (
-                        <>
-                            {/*<li><a href="#ADR">ADR</a></li>*/}
-                            <li ref={dropdownRef} style={{position: "relative", listStyle: "none"}}>
-                                {userInfo?.user?.images?.avatar?.full ? (
-                                    <div
-                                        style={{
-                                            cursor: "pointer",
-                                            display: "inline-flex",
-                                            alignItems: "center",
-                                            padding: "0 6px",
-                                        }}
-                                        onClick={() => setDropdownOpen((open) => !open)}
-                                        tabIndex={0}
-                                    >
-                                        <img
-                                            src={userInfo.user.images.avatar.full}
-                                            alt="User avatar"
-                                            style={{width: "35px", borderRadius: "5%"}}
-                                        />
-                                    </div>
-                                ) : (
-                                    <div
-                                        style={{
-                                            color: "#eee",
-                                            padding: "0 8px",
-                                            cursor: "pointer",
-                                            display: "inline-flex",
-                                            alignItems: "center",
-                                        }}
-                                        onClick={() => setDropdownOpen((open) => !open)}
-                                        tabIndex={0}
-                                    >
-                                        Settings
-                                    </div>
-                                )}
+                    <ul>
+                        {sessionId ? (
+                            <>
+                                {/*<li><a href="#ADR">ADR</a></li>*/}
+                                <li ref={dropdownRef} style={{position: "relative", listStyle: "none"}}>
+                                    {userInfo?.user?.images?.avatar?.full ? (
+                                        <div
+                                            style={{
+                                                cursor: "pointer",
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                padding: "0 6px",
+                                            }}
+                                            onClick={() => setDropdownOpen((open) => !open)}
+                                            tabIndex={0}
+                                        >
+                                            <img
+                                                src={userInfo.user.images.avatar.full}
+                                                alt="User avatar"
+                                                style={{width: "35px", borderRadius: "5%"}}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div
+                                            style={{
+                                                color: "#eee",
+                                                padding: "0 8px",
+                                                cursor: "pointer",
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                            }}
+                                            onClick={() => setDropdownOpen((open) => !open)}
+                                            tabIndex={0}
+                                        >
+                                            Settings
+                                        </div>
+                                    )}
 
-                                {dropdownOpen && (
-                                    <ul
-                                        style={{
-                                            position: "absolute",
-                                            top: "100%",
-                                            right: 0,
-                                            background: "#1a1a1a",
-                                            padding: "8px 0",
-                                            margin: 0,
-                                            listStyle: "none",
-                                            borderRadius: "4px",
-                                            boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
-                                            minWidth: "150px",
-                                            zIndex: 1000,
-                                            display: "block",
-                                        }}
-                                    >
-                                        <li style={{padding: "8px 16px"}}>
-                                            <Link
-                                                to="/user-details"
-                                                style={{color: "#eee", textDecoration: "none"}}
-                                                onClick={() => setDropdownOpen(false)}
-                                            >
-                                                User Details
-                                            </Link>
-                                        </li>
+                                    {dropdownOpen && (
+                                        <ul
+                                            style={{
+                                                position: "absolute",
+                                                top: "100%",
+                                                right: 0,
+                                                background: "#1a1a1a",
+                                                padding: "8px 0",
+                                                margin: 0,
+                                                listStyle: "none",
+                                                borderRadius: "4px",
+                                                boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
+                                                minWidth: "150px",
+                                                zIndex: 1000,
+                                                display: "block",
+                                            }}
+                                        >
+                                            <li style={{padding: "8px 16px"}}>
+                                                <Link
+                                                    to="/user-details"
+                                                    style={{color: "#eee", textDecoration: "none"}}
+                                                    onClick={() => setDropdownOpen(false)}
+                                                >
+                                                    User Details
+                                                </Link>
+                                            </li>
 
-                                        <li style={{padding: "8px 16px"}}>
-                                            <Link
-                                                to="/keys"
-                                                style={{color: "#eee", textDecoration: "none"}}
-                                                onClick={() => setDropdownOpen(false)}
-                                            >
-                                                API-Settings
-                                            </Link>
-                                        </li>
+                                            <li style={{padding: "8px 16px"}}>
+                                                <Link
+                                                    to="/keys"
+                                                    style={{color: "#eee", textDecoration: "none"}}
+                                                    onClick={() => setDropdownOpen(false)}
+                                                >
+                                                    API-Settings
+                                                </Link>
+                                            </li>
 
-                                        <li style={{padding: "8px 16px"}}>
-                                            <button
-                                                onClick={() => {
-                                                    setDropdownOpen(false);
-                                                    logout();
-                                                }}
-                                                style={{
-                                                    background: "none",
-                                                    border: "none",
-                                                    color: "#eee",
-                                                    width: "100%",
-                                                    textAlign: "left",
-                                                    cursor: "pointer",
-                                                    fontSize: "inherit",
-                                                    padding: 0,
-                                                }}
-                                            >
-                                                Logout
-                                            </button>
-                                        </li>
-                                    </ul>
-                                )}
-                            </li>
-                        </>
-                    ) : (
-                        <>
-                            <li><Link to="/login">Login</Link></li>
-                            <li><Link to="/register">Register</Link></li>
-                        </>
-                    )}
-                </ul>
-            </nav>
-
-            <Routes>
-                <Route path="/" element={<MediaPage sessionId={sessionId} />} />
-                <Route path="/movies" element={<Movies sessionId={sessionId} />} />
-                <Route path="/shows" element={<Shows sessionId={sessionId} />} />
-                <Route path="/keys" element={<Keys sessionId={sessionId} />} />
-                <Route path="/user-details" element={<UserDetails sessionId={sessionId} />} />
-                <Route path="/login"   element={<Login setSessionId={setSessionId}
-                                                       setPendingTrakt={setPendingTrakt}
-                                                       setPendingRedirect={setPendingRedirect} />} />
-                <Route path="/register" element={<Register setSessionId={setSessionId} />} />
-                <Route path="/movie/:tmdb_id" element={<FilmCallingCard sessionId={sessionId} />} />
-                <Route path="/show/:tmdb_id" element={<FilmCallingCard type="show" sessionId={sessionId} />} />
-            </Routes>
+                                            <li style={{padding: "8px 16px"}}>
+                                                <button
+                                                    onClick={() => {
+                                                        setDropdownOpen(false);
+                                                        logout();
+                                                    }}
+                                                    style={{
+                                                        background: "none",
+                                                        border: "none",
+                                                        color: "#eee",
+                                                        width: "100%",
+                                                        textAlign: "left",
+                                                        cursor: "pointer",
+                                                        fontSize: "inherit",
+                                                        padding: 0,
+                                                    }}
+                                                >
+                                                    Logout
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    )}
+                                </li>
+                            </>
+                        ) : (
+                            <>
+                                <li><Link to="/login">Login</Link></li>
+                                <li><Link to="/register">Register</Link></li>
+                            </>
+                        )}
+                    </ul>
+                </nav>
+                <div style={{flexGrow: 1}}>
+                    <Routes>
+                        <Route path="/" element={<MediaPage sessionId={sessionId}/>}/>
+                        <Route path="/movies" element={<Movies sessionId={sessionId}/>}/>
+                        <Route path="/shows" element={<Shows sessionId={sessionId}/>}/>
+                        <Route path="/keys" element={<Keys sessionId={sessionId}/>}/>
+                        <Route path="/user-details" element={<UserDetails sessionId={sessionId}/>}/>
+                        <Route path="/login" element={<Login setSessionId={setSessionId}
+                                                             setPendingTrakt={setPendingTrakt}
+                                                             setPendingRedirect={setPendingRedirect}/>}/>
+                        <Route path="/register" element={<Register setSessionId={setSessionId}/>}/>
+                        <Route path="/movie/:tmdb_id" element={<FilmCallingCard sessionId={sessionId}/>}/>
+                        <Route path="/show/:tmdb_id" element={<FilmCallingCard type="show" sessionId={sessionId}/>}/>
+                    </Routes>
+                </div>
+            </div>
         </BrowserRouter>
-    );
+);
 }

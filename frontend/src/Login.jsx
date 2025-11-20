@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {redirect, useNavigate} from "react-router-dom";
 
 export default function Login({ setSessionId, setPendingTrakt, setPendingRedirect }) {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [message, setMessage] = useState("");
+    const [showPass, setShowPass] = useState(false);
     const navigate = useNavigate();
 
     async function handleLogin(e) {
@@ -34,31 +35,52 @@ export default function Login({ setSessionId, setPendingTrakt, setPendingRedirec
             setSessionId(data.session_id);
             + setPendingTrakt(data.needs_trakt_login);
             + setPendingRedirect(data.redirect || "");
+
+            navigate("/")
         } catch (err) {
             setMessage(err.message);
         }
     }
 
     return (
-        <form onSubmit={handleLogin} className="flex flex-col gap-2 max-w-xs">
-            <input
-                type="text"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="border p-2 rounded"
-            />
-            <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="border p-2 rounded"
-            />
-            <button type="submit" className="bg-blue-500 text-white p-2 rounded">
-                Sign In
-            </button>
-            {message && <p>{message}</p>}
-        </form>
+        <div
+            className="auth-wrap"
+            style={{
+                height: "calc(100vh - 60px)",
+                background: "#242424"
+            }}
+        >
+            <form onSubmit={handleLogin} className="auth-card">
+                <h2>Login</h2>
+
+                <input
+                    type="text"
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                />
+
+                <div className="pw-row">
+                    <input
+                        type={showPass ? "text" : "password"}
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+
+                    <button
+                        type="button"
+                        className="pw-toggle"
+                        onClick={() => setShowPass(!showPass)}
+                    >
+                        {showPass ? "Hide" : "Show"}
+                    </button>
+                </div>
+
+                <button type="submit">Login</button>
+
+                {message && <p>{message}</p>}
+            </form>
+        </div>
     );
 }
