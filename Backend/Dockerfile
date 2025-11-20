@@ -1,21 +1,11 @@
-FROM ubuntu:22.04
-
-RUN apt-get update && apt-get install -y \
-    build-essential cmake git \
-    libssl-dev qtbase5-dev \
-    libcurl4-openssl-dev \
-    && rm -rf /var/lib/apt/lists/*
+FROM python:3.11-slim
 
 WORKDIR /app
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy only build files first for caching
-COPY CMakeLists.txt ./
-COPY include/ include/
-COPY src/ src/
-COPY config/ config/
-
-
-RUN cmake -B build -S . && cmake --build build --config Release
+COPY . /app
+ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8080
-CMD ["./build/Backend"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]

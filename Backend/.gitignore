@@ -1,57 +1,25 @@
-# Prerequisites
-*.d
+.env
+venv
+data
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
 
-# Precompiled Headers
-*.gch
-*.pch
+# Virtual environment
+venv/
+.env/
 
-# Linker files
-*.ilk
+# Bytecode
+__pycache__/
+*.pyc
 
-# Debugger Files
-*.pdb
+# Editor/IDE files
+.vscode/
+.idea/
+*.swp
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
+# Test coverage
+htmlcov/
+.pytest_cache/
 
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-
-# debug information files
-*.dwo
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-cmake-build-debug
-tests
-
-config/config.json
+# Logs and temporary files
+*.log
+*.tmp
