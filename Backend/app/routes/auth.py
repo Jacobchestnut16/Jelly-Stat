@@ -1,11 +1,23 @@
 from __future__ import annotations
-from app.utils.database import create_user, authUser, get_selected_tmdb_key
+
+import secrets
+
+from app.utils.database import (create_user,
+                                authUser,
+                                get_user_by_id,
+                                get_selected_tmdb_key,
+                                get_selected_jellyseerr_key,
+                                get_selected_jellyseerr_url,
+                                get_selected_jellyfin_key,
+                                get_selected_jellyfin_url
+                                )
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import RedirectResponse
 from app.services import trakt_oauth
 from app.utils.session_manager import get_session, update_session, delete_session
 from app.utils import database as db
+from app.routes.user import user_details
 
 from app.utils.session_manager import create_session
 
@@ -15,6 +27,7 @@ router = APIRouter()
 
 @router.get("/signin")
 def signin(username: str, password: str):
+    global needs_trakt_login
     p = authUser(username)
     if not p or password != p['pass']:
         raise HTTPException(status_code=401, detail="Username or password is incorrect")
@@ -24,13 +37,27 @@ def signin(username: str, password: str):
         "TRAKT_CLIENT_SECRET": p["trakt_client_secret"],
         "TRAKT_TOKEN": p["access_token"],
         "TMDB_TOKEN": get_selected_tmdb_key(p["id"])["api_key"] if get_selected_tmdb_key(p["id"]) else None,
-        "JELLYSEERR_TOKEN": p.get("jellyseerr_token"),
+        "JELLYSEERR_TOKEN": get_selected_jellyseerr_key(p["id"])["api_key"] if get_selected_jellyseerr_key(p["id"]) else None,
+        "JELLYSEERR_URL": get_selected_jellyseerr_url(p["id"])["url"] if get_selected_jellyseerr_url(p["id"]) else None,
+        "JELLYFIN_TOKEN": get_selected_jellyfin_key(p["id"])["api_key"] if get_selected_jellyfin_key(p["id"]) else None,
+        "JELLYFIN_URL": get_selected_jellyfin_url(p["id"])["url"] if get_selected_jellyfin_url(p["id"]) else None,
         "USERNAME": username,
         "UID": p["id"],
     }
 
     session_id = create_session(session_data)
-    needs_trakt_login = session_data["TRAKT_TOKEN"] is None
+
+    if session_data["TRAKT_TOKEN"] and session_id:
+        needs_trakt_login = False
+        try:
+            details = user_details(session_id)
+            needs_trakt_login = False if 'user' in details else True
+        except Exception as e:
+            needs_trakt_login = True
+            print(e)
+
+    # needs_trakt_login = session_data["TRAKT_TOKEN"] is None
+    print(f"TRAKT REQUIRES LOGIN: {needs_trakt_login}")
 
     return {
         "session_id": session_id,
@@ -45,6 +72,20 @@ def validate(session_id: str):
         raise HTTPException(401, "invalid session")
     return {"valid": True}
 
+@router.get("/user/details/exchange-code")
+def validate(session_id: str, password: str):
+    session = get_session(session_id)
+    if not session:
+        raise HTTPException(401, "invalid session")
+
+    p = get_user_by_id(session["UID"])
+    if not p or password != p['pass']:
+        raise HTTPException(status_code=401, detail="Invalid details")
+
+    exchange_code = secrets.token_hex(32)
+    update_session(session_id, {"Authorization": exchange_code})
+
+    return {"valid": True, "token":exchange_code}
 
 @router.get("/register")
 def register(username,password,client_id,client_secret):

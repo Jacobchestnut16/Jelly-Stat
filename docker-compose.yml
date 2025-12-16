@@ -4,14 +4,25 @@ services:
     container_name: traktplus_db
     restart: always
     environment:
-      POSTGRES_USER: traktuser
-      POSTGRES_PASSWORD: traktpass
-      POSTGRES_DB: traktplus
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - trakt_db_data:/var/lib/postgresql/data
       - ./Backend/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:5432"
+
+  migrate:
+    build: ./backend
+    command: sh -c "python run_migrations.py"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
+    volumes:
+      - ./Backend/db/migrations:/app/db/migrations
+
 
   backend:
     build: ./backend #Backend project dircotry
@@ -19,21 +30,26 @@ services:
     container_name: backend
     depends_on:
       - db
+      - migrate
     environment:
-      - ENV=production
-      - DATABASE_URL=postgresql://traktuser:traktpass@db:5432/traktplus
+      ENV: production
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
+      APP_HOST: "http://localhost:${BACKEND_PORT}"
+      BACKEND_PORT: "${BACKEND_PORT}"
+      FRONTEND_PORT: "${FRONTEND_PORT}"
     ports:
-      - "3001:8080" #The backend uses port 8080, 3001 is the port the frontend looks up
-    volumes:
-      - ./config/.env:/app/.env #The config file
+      - "${BACKEND_PORT}:8080"
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE: "http://localhost:${BACKEND_PORT}"
     container_name: frontend
     depends_on:
       - backend
     ports:
-      - "3000:80" #NGINX runs 80 for the frontend change 3000 if you need a different port on your host
+      - ${FRONTEND_PORT}:80
 
 
 volumes:

@@ -78,6 +78,7 @@ export default function Login({ setSessionId, setPendingTrakt, setPendingRedirec
                 </div>
 
                 <button type="submit">Login</button>
+                <a href={'/register'}>Create an account</a>
 
                 {message && <p>{message}</p>}
             </form>

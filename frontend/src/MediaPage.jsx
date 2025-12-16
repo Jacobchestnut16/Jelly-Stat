@@ -18,10 +18,24 @@ export default function MediaPage({ sessionId }) {
     }, []);
 
     // Example: pass sessionId to Trending and Recommended if they need it in fetch calls
+    if (localSessionId) {
+        return (
+            <div>
+                <Trending sessionId={localSessionId}/>
+                <Recommended sessionId={localSessionId}/>
+                <div className="credit">
+                    <p>Images powered by <a href="https://tmdb.org">TMDB</a></p>
+                </div>
+            </div>
+        );
+    }
     return (
         <div>
-            <Trending sessionId={localSessionId} />
-            <Recommended sessionId={localSessionId} />
+            <div>
+                <h1>It appears you are logged out.
+                <br/>
+                Please login or create an account.</h1>
+            </div>
             <div className="credit">
                 <p>Images powered by <a href="https://tmdb.org">TMDB</a></p>
             </div>

@@ -8,11 +8,16 @@ import UserDetails from "./UserDetails.jsx";
 import Movies from "./Movies.jsx";
 import Shows from "./Shows.jsx";
 import FilmCallingCard from "./media/FilmCallingCard.jsx";
+import JellyseerrList from "./jellyseerr/JellyseerrList.jsx";
+import JellyseerrRaw from "./jellyseerr/JellyseerrRaw.jsx";
+import JellyseerrPage from "./jellyseerr/JellyseerrPage.jsx";
+
 
 export default function App() {
     // Store sessionId from localStorage (was user_id before)
     const [sessionId, setSessionId] = useState(() => localStorage.getItem("session_id"));
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [dropdownOpen1, setDropdownOpen1] = useState(false);
     const [pendingTrakt, setPendingTrakt] = useState(
         localStorage.getItem("pending_trakt") === "1"
     );
@@ -21,6 +26,7 @@ export default function App() {
     );
     const [userInfo, setUserInfo] = useState(null);
     const dropdownRef = useRef(null);
+    const dropdownRef1 = useRef(null);
 
     async function logout() {
         try {
@@ -67,7 +73,12 @@ export default function App() {
             }
 
             if (pendingTrakt && pendingRedirect) {
-                window.location.href = pendingRedirect;
+                var pndRdrt = pendingRedirect
+                localStorage.removeItem("pending_trakt");
+                localStorage.removeItem("pending_redirect");
+                setPendingTrakt(false);
+                setPendingRedirect("");
+                window.location.href = pndRdrt;
             }
         }
 
@@ -106,7 +117,7 @@ export default function App() {
                             window.location.href = pndRdrt;
                         }else{
                             console.error("No Trakt URL")
-                            await logout();
+                            // await logout();
                             return;
                         }
                     }else{
@@ -133,6 +144,10 @@ export default function App() {
             if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
                 setDropdownOpen(false);
             }
+
+            if (dropdownRef1.current && !dropdownRef1.current.contains(e.target)) {
+                setDropdownOpen1(false);
+            }
         }
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -151,7 +166,61 @@ export default function App() {
                     <ul>
                         {sessionId ? (
                             <>
-                                {/*<li><a href="#ADR">ADR</a></li>*/}
+                                <li ref={dropdownRef1} style={{position: "relative", listStyle: "none"}}>
+                                    <div
+                                        style={{
+                                            color: "#eee",
+                                            padding: "0 8px",
+                                            cursor: "pointer",
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                        }}
+                                        onClick={() => setDropdownOpen1((open) => !open)}
+                                        tabIndex={0}
+                                    >
+                                        Jellyseerr
+                                    </div>
+
+                                    {dropdownOpen1 && (
+                                        <ul
+                                            style={{
+                                                position: "absolute",
+                                                top: "100%",
+                                                right: 0,
+                                                background: "#1a1a1a",
+                                                padding: "8px 0",
+                                                margin: 0,
+                                                listStyle: "none",
+                                                borderRadius: "4px",
+                                                boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
+                                                minWidth: "150px",
+                                                zIndex: 1000,
+                                                display: "block",
+                                            }}
+                                        >
+                                            <li style={{padding: "8px 16px"}}>
+                                                <Link
+                                                    to="/jellyseerr"
+                                                    style={{color: "#eee", textDecoration: "none"}}
+                                                    onClick={() => setDropdownOpen1(false)}
+                                                >
+                                                    Requested media
+                                                </Link>
+                                            </li>
+
+                                            <li style={{padding: "8px 16px"}}>
+                                                <Link
+                                                    to="/jellyseerr/archived"
+                                                    style={{color: "#eee", textDecoration: "none"}}
+                                                    onClick={() => setDropdownOpen1(false)}
+                                                >
+                                                    Archived Media
+                                                </Link>
+                                            </li>
+                                        </ul>
+                                    )}
+                                </li>
+                                <li><a href="#ADR">ADR</a></li>
                                 <li ref={dropdownRef} style={{position: "relative", listStyle: "none"}}>
                                     {userInfo?.user?.images?.avatar?.full ? (
                                         <div
@@ -268,6 +337,8 @@ export default function App() {
                         <Route path="/register" element={<Register setSessionId={setSessionId}/>}/>
                         <Route path="/movie/:tmdb_id" element={<FilmCallingCard sessionId={sessionId}/>}/>
                         <Route path="/show/:tmdb_id" element={<FilmCallingCard type="show" sessionId={sessionId}/>}/>
+                        <Route path="/jellyseerr" element={<JellyseerrPage sessionId={sessionId} />} />
+                        <Route path="/jellyseerr/archived" element={<JellyseerrPage sessionId={sessionId} archived />} />
                     </Routes>
                 </div>
             </div>

@@ -82,22 +82,3 @@ CREATE TABLE IF NOT EXISTS history (
     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     submitted BOOLEAN DEFAULT FALSE
 );
-
--- updates and alters
-
-CREATE TABLE IF NOT EXISTS jellyseerr_url (
-    id SERIAL PRIMARY KEY,
-    jellyseerr_url TEXT NOT NULL UNIQUE,
-    active BOOLEAN DEFAULT FALSE
-);
-
-CREATE TABLE IF NOT EXISTS user_jellyseerr_url(
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    jellyseerr_url INTEGER REFERENCES jellyseerr_url(id) ON DELETE CASCADE,
-    selected BOOLEAN DEFAULT FALSE
-);
-
-CREATE UNIQUE INDEX IF NOT EXISTS unique_user_jellyseerr_url
-ON user_jellyseerr_url (user_id)
-WHERE selected = TRUE;
