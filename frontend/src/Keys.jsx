@@ -17,14 +17,23 @@ export default function Keys({ sessionId }) {
         return () => window.removeEventListener("storage", handler);
     }, []);
 
+    // const appendSessionId = (url) => {
+    //     if (!url) return null;
+    //     const strUrl = String(url);
+    //     if (!localSessionId) return strUrl;
+    //     return strUrl.includes("?")
+    //         ? `${strUrl}&session_id=${localSessionId}`
+    //         : `${strUrl}?session_id=${localSessionId}`;
+    // };
+
     const appendSessionId = (url) => {
-        if (!url) return null;
-        const strUrl = String(url);
-        if (!localSessionId) return strUrl;
-        return strUrl.includes("?")
-            ? `${strUrl}&session_id=${localSessionId}`
-            : `${strUrl}?session_id=${localSessionId}`;
+        const sid = localSessionId || sessionId || localStorage.getItem("session_id");
+        if (!sid) return url;
+        return url.includes("?")
+            ? `${url}&session_id=${sid}`
+            : `${url}?session_id=${sid}`;
     };
+
 
     //
     // TMDB KEYS
@@ -194,7 +203,7 @@ export default function Keys({ sessionId }) {
                 if (allRes.ok) setJellyseerrUrls(await allRes.json());
                 if (selRes.ok) {
                     const sel = await selRes.json();
-                    setJellyseerrUrlSelectedId(sel.id);
+                    setJellyseerrUrlSelectedId(sel.url_id);
                 }
             } catch (e) {}
         }
@@ -266,7 +275,11 @@ export default function Keys({ sessionId }) {
                     fetch(appendSessionId(`${API_BASE}/keys/jellyfin/get/selected`)),
                 ]);
 
-                if (allRes.ok) setJellyfinKeys(await allRes.json());
+                if (allRes.ok) {
+                    const all = await allRes.json();
+                    console.log(all)
+                    setJellyfinKeys(all);
+                }
                 if (selRes.ok) {
                     const sel = await selRes.json();
                     setJellyfinKeySelectedId(sel.id);
@@ -274,6 +287,7 @@ export default function Keys({ sessionId }) {
             } catch (e) {}
         }
         fetchFinKeys();
+
     }, [localSessionId]);
 
     async function addAndSelectJellyfinKey() {
@@ -485,8 +499,8 @@ export default function Keys({ sessionId }) {
                     onChange={(e) => selectJellyfinKey(Number(e.target.value))}
                 >
                     <option value="" disabled>Select Jellyfin Key</option>
-                    {jellyfinKeys.map(({ id, api_key }) => (
-                        <option key={id} value={id}>{api_key}</option>
+                    {jellyfinKeys.map(({ id, jellyfin_key }) => (
+                        <option key={id} value={id}>{jellyfin_key}</option>
                     ))}
                 </select>
 

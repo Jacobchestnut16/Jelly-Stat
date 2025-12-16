@@ -17,6 +17,7 @@ from fastapi.responses import RedirectResponse
 from app.services import trakt_oauth
 from app.utils.session_manager import get_session, update_session, delete_session
 from app.utils import database as db
+from app.routes.user import user_details
 
 from app.utils.session_manager import create_session
 
@@ -26,6 +27,7 @@ router = APIRouter()
 
 @router.get("/signin")
 def signin(username: str, password: str):
+    global needs_trakt_login
     p = authUser(username)
     if not p or password != p['pass']:
         raise HTTPException(status_code=401, detail="Username or password is incorrect")
@@ -44,7 +46,18 @@ def signin(username: str, password: str):
     }
 
     session_id = create_session(session_data)
-    needs_trakt_login = session_data["TRAKT_TOKEN"] is None
+
+    if session_data["TRAKT_TOKEN"] and session_id:
+        needs_trakt_login = False
+        try:
+            details = user_details(session_id)
+            needs_trakt_login = False if 'user' in details else True
+        except Exception as e:
+            needs_trakt_login = True
+            print(e)
+
+    # needs_trakt_login = session_data["TRAKT_TOKEN"] is None
+    print(f"TRAKT REQUIRES LOGIN: {needs_trakt_login}")
 
     return {
         "session_id": session_id,

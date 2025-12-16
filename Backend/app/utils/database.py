@@ -328,18 +328,14 @@ def remove_selected_jellyseerr_key(user_id):
 
 def get_selected_jellyseerr_url(user_id):
     with get_connection() as conn:
-        r = conn.execute(
-            text("SELECT url FROM user_jellyseerr_url WHERE user_id = :user_id AND selected = TRUE"),
-            {"user_id": user_id},
-        )
+        r = conn.execute(text("""
+            SELECT j.id AS url_id, j.url
+            FROM user_jellyseerr_url uj
+            JOIN jellyseerr_url j ON uj.url = j.id
+            WHERE uj.user_id = :user_id AND uj.selected = TRUE
+        """), {"user_id": user_id})
         row = r.fetchone()
-        if not row:
-            return None
-
-        url_id = row[0]
-        url = get_jellyseerr_url(url_id)  # expects row_to_dict(...) or None
-        return {"id": url_id, "url": url["url"] if url else None}
-
+        return row_to_dict(row) if row else None
 
 
 def select_jellyseerr_url(user_id, jellyseerr_url_id):
@@ -721,7 +717,7 @@ def get_selected_jellyfin_key(user_id):
         key_id = row[0]
         key = get_jellyfin_key(key_id)
 
-        return {"id": key_id, "jellyfin_key": key["jellyfin_key"] if key else None}
+        return {"id": key_id, "api_key": key["jellyfin_key"] if key else None}
 
 def select_jellyfin_key(user_id, jellyfin_key_id):
     with engine.begin() as conn:

@@ -8,6 +8,10 @@ import UserDetails from "./UserDetails.jsx";
 import Movies from "./Movies.jsx";
 import Shows from "./Shows.jsx";
 import FilmCallingCard from "./media/FilmCallingCard.jsx";
+import JellyseerrList from "./jellyseerr/JellyseerrList.jsx";
+import JellyseerrRaw from "./jellyseerr/JellyseerrRaw.jsx";
+import JellyseerrPage from "./jellyseerr/JellyseerrPage.jsx";
+
 
 export default function App() {
     // Store sessionId from localStorage (was user_id before)
@@ -69,7 +73,12 @@ export default function App() {
             }
 
             if (pendingTrakt && pendingRedirect) {
-                window.location.href = pendingRedirect;
+                var pndRdrt = pendingRedirect
+                localStorage.removeItem("pending_trakt");
+                localStorage.removeItem("pending_redirect");
+                setPendingTrakt(false);
+                setPendingRedirect("");
+                window.location.href = pndRdrt;
             }
         }
 
@@ -108,7 +117,7 @@ export default function App() {
                             window.location.href = pndRdrt;
                         }else{
                             console.error("No Trakt URL")
-                            await logout();
+                            // await logout();
                             return;
                         }
                     }else{
@@ -191,7 +200,7 @@ export default function App() {
                                         >
                                             <li style={{padding: "8px 16px"}}>
                                                 <Link
-                                                    to="#Requested-media"
+                                                    to="/jellyseerr"
                                                     style={{color: "#eee", textDecoration: "none"}}
                                                     onClick={() => setDropdownOpen1(false)}
                                                 >
@@ -201,7 +210,7 @@ export default function App() {
 
                                             <li style={{padding: "8px 16px"}}>
                                                 <Link
-                                                    to="#"
+                                                    to="/jellyseerr/archived"
                                                     style={{color: "#eee", textDecoration: "none"}}
                                                     onClick={() => setDropdownOpen1(false)}
                                                 >
@@ -328,6 +337,8 @@ export default function App() {
                         <Route path="/register" element={<Register setSessionId={setSessionId}/>}/>
                         <Route path="/movie/:tmdb_id" element={<FilmCallingCard sessionId={sessionId}/>}/>
                         <Route path="/show/:tmdb_id" element={<FilmCallingCard type="show" sessionId={sessionId}/>}/>
+                        <Route path="/jellyseerr" element={<JellyseerrPage sessionId={sessionId} />} />
+                        <Route path="/jellyseerr/archived" element={<JellyseerrPage sessionId={sessionId} archived />} />
                     </Routes>
                 </div>
             </div>
